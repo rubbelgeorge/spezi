@@ -9,7 +9,7 @@
   Displays high-resolution cover art and animated album art (if available).
   
 - 🕹️ **Remote control features**  
-  Play, pause, skip, and manage your queue directly from Spezi.
+  Play, pause, skip, directly from spezi.
 
 - 🌈 **Visualizers**  
   Choose from built-in background visualizers—or add your own!
@@ -32,7 +32,18 @@
 - **Python 3.11**  
   > other versions may also work, but this one is recommended
 
-- **Xcode Command Line Tools**  
+- **Installing**  
   Install with:
   ```bash
   xcode-select --install
+  pip install -r requirements.txt
+
+- **Running the app**  
+  run with:
+  ```bash
+  python main.py
+-
+  Then open the interface in Safari (currently the only supported browser):
+
+  http://localhost:22441
+  
