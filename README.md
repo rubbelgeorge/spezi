@@ -10,3 +10,20 @@ Screenshots:
 
 
 <img width="1470" alt="Bildschirmfoto 2025-06-07 um 19 27 35" src="https://github.com/user-attachments/assets/ce9f2d61-77a3-44a9-8f8f-b72811dc17b1" />
+
+
+Prerequisites 
+
+MacOs 15.x or newer (older versions should work, its the only one i was able to test) 
+Python 3.11 (other versions could work as well) 
+
+
+Installing
+
+pip install -r requirements.txt 
+xcode-select --install
+
+Running the app 
+
+python main.py 
+now open [localhost:22441/](http://localhost:22441) in safari (only safari seems to be working properly at the moment)
