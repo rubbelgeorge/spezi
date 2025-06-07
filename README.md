@@ -4,5 +4,9 @@ Additionally spezi serves as a simple remote for apple music and has several bac
 
 
 
+Screenshots:
+
+<img width="1470" alt="Bildschirmfoto 2025-06-07 um 19 26 44" src="https://github.com/user-attachments/assets/8fc69c1c-d666-4399-b764-64657ff7cccb" />
 
 
+<img width="1470" alt="Bildschirmfoto 2025-06-07 um 19 27 35" src="https://github.com/user-attachments/assets/ce9f2d61-77a3-44a9-8f8f-b72811dc17b1" />
