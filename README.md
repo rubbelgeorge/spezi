@@ -46,4 +46,8 @@
   Then open the interface in Safari (currently the only supported browser):
 
   http://localhost:22441
+
+
+- **Visualizers**  
+  There are several visualizers included, but you can easily add more. Just duplicate one of the existing in the visualizer folder and change the value. every js file in this folder that is compatible with the app are in the visualizer app automatically. 
   
