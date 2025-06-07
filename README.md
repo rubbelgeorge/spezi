@@ -5,7 +5,7 @@
 - 🎚️ **Automatic sample rate matching**  
   Seamlessly switches your audio device’s sample rate to match the currently playing song.
   
-- 🎨 **Beautiful Now Playing screen**  
+- 🎨 **Now Playing screen**  
   Displays high-resolution cover art and animated album art (if available).
   
 - 🕹️ **Remote control features**  
