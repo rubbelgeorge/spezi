@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Now Playing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      /* Fine‑tune these three values as you like */
+      --art-margin-top: 1rem;
+      --art-margin-bottom: 1rem;
+      --art-margin-left: 1rem;
+
+      --artwork-max-width: 100%;
+      --artwork-max-height: 100%;
+      --metadata-max-width: 35%;
+      --metadata-padding: 1.5rem;
+      --player-button-size: 3.5rem;
+    }
+    #artworkWrapper{
+      margin-top: var(--art-margin-top);
+      margin-bottom: var(--art-margin-bottom);
+      margin-left: var(--art-margin-left);
+    }
+  </style>
+  <script>
+    function sendPlayerCommand(command) {
+      fetch(`/player/${command}`)
+        .then(response => {
+          if (!response.ok) {
+            console.error(`Failed to send command: ${command}`);
+          }
+        })
+        .catch(err => console.error(`Error sending command: ${command}`, err));
+    }
+
+    let intervalID = null;
+
+    function refreshData() {
+      fetch(`/data?timestamp=${Date.now()}`)
+        .then(response => response.json())
+        .then(data => {
+          // Update text fields
+          document.getElementById("title").innerText = data.nowplaying.Title || "Unknown Title";
+          document.getElementById("artist").innerText = data.nowplaying.Artist || "Unknown Artist";
+          document.getElementById("album").innerText = data.nowplaying.Album || "Unknown Album";
+
+          const imgElement = document.getElementById("album_art");
+          const hevcUrl = data.nowplaying.HEVC && data.nowplaying.HEVC !== "None" ? data.nowplaying.HEVC : "";
+          const fallbackUrl = "/static/images/cover.png";
+          const staticArtworkUrl = data.nowplaying.Artwork || "";
+
+          // Always use staticArtworkUrl for background
+          const backgroundArtElem = document.getElementById("bg-image");
+
+          // Helper constants for containers
+          const imgContainer = document.getElementById("img_container");
+          const videoContainer = document.getElementById("video_container");
+
+          if (!window._lastArtworkUrl || window._lastArtworkUrl !== staticArtworkUrl) {
+            window._lastArtworkUrl = staticArtworkUrl;
+            if (window.updateVisualizerBackground) updateVisualizerBackground(`/static/images/cover.png?t=${Date.now()}`);
+
+          }
+
+          // Use HEVC if available, otherwise fallback to staticArtwork or default
+          let finalArtworkUrl = hevcUrl || staticArtworkUrl || fallbackUrl;
+
+          // Decide between video or image and preload image to avoid flicker
+          const newSrc = `${finalArtworkUrl}?t=${Date.now()}`;
+          const videoElement = document.getElementById("album_video");
+          const videoSource = document.getElementById("video_source");
+
+          if (hevcUrl) {
+            if (videoSource.src !== hevcUrl) {
+              // Show fallback image briefly while video loads
+              imgContainer.classList.remove("hidden");
+              imgElement.classList.remove("hidden");
+              imgElement.src = `${fallbackUrl}?fallback=${Date.now()}`;
+
+              // Then load the HEVC video
+              videoSource.src = hevcUrl;
+              videoElement.load();
+
+              // Switch to video only when it's ready to render
+              videoElement.onloadeddata = () => {
+                videoContainer.classList.remove("hidden");
+                videoElement.classList.remove("hidden");
+                imgContainer.classList.add("hidden");
+                imgElement.classList.add("hidden");
+                imgElement.src = "";
+              };
+            } else {
+              videoContainer.classList.remove("hidden");
+              videoElement.classList.remove("hidden");
+              imgContainer.classList.add("hidden");
+              imgElement.classList.add("hidden");
+              imgElement.src = "";
+            }
+          } else {
+            // Preload static/fallback image, then show
+            videoContainer.classList.add("hidden");
+            videoElement.classList.add("hidden");
+            imgContainer.classList.remove("hidden");
+            // Only preload if URL changed
+            const currentImgUrl = imgElement.src.split("?")[0];
+            if (currentImgUrl !== finalArtworkUrl) {
+              imgElement.classList.remove("hidden");
+              imgElement.src = `${fallbackUrl}?fallback=${Date.now()}`;
+              const preloadImg = new Image();
+              preloadImg.onload = () => {
+                if (imgElement.src.includes("cover.png") || imgElement.src.includes(fallbackUrl)) {
+                  imgElement.src = newSrc;
+                }
+              };
+              preloadImg.src = newSrc;
+            } else {
+              imgElement.classList.remove("hidden");
+            }
+          }
+
+          // Update audio info
+          const sampleRateElem = document.getElementById("sampleRate");
+          const bitDepthElem = document.getElementById("bitDepth");
+          const audioInfoElem = document.getElementById("audioInfo");
+          if (data.info.sample_rate) {
+            const sr = data.info.sample_rate / 1000;
+            sampleRateElem.textContent = (sr % 1 === 0) ? sr.toFixed(0) : sr.toFixed(1);
+            bitDepthElem.textContent = data.info.bitdepth || "—";
+
+            const label = sr > 48 ? "Hi-Res Lossless" : "Lossless";
+            document.getElementById("audioLabel").textContent = label;
+
+            if (sr > 48) {
+              audioInfoElem.style.color = "black";
+              audioInfoElem.style.backgroundColor = "#dea442";
+              audioInfoElem.style.borderColor = "#dea442";
+            } else {
+              audioInfoElem.style.color = "black";
+              audioInfoElem.style.backgroundColor = "white";
+              audioInfoElem.style.borderColor = "white";
+            }
+          } else {
+            sampleRateElem.textContent = "—";
+            bitDepthElem.textContent = "—";
+            document.getElementById("audioLabel").textContent = "Lossless";
+            audioInfoElem.style.color = "black";
+            audioInfoElem.style.backgroundColor = "white";
+            audioInfoElem.style.borderColor = "white";
+          }
+
+          // Update device info
+          const deviceNameElem = document.getElementById("deviceName");
+          if (data.device) {
+            deviceNameElem.textContent = data.device.name || "—";
+            const deviceSampleRateElem = document.getElementById("deviceSampleRate");
+            const deviceBitDepthElem = document.getElementById("deviceBitDepth");
+            const dsr = data.device.sample_rate ? data.device.sample_rate / 1000 : null;
+            deviceSampleRateElem.textContent = dsr !== null ? ((dsr % 1 === 0) ? dsr.toFixed(0) : dsr.toFixed(1)) : "—";
+            deviceBitDepthElem.textContent = data.device.bit_depth || "—";
+          }
+
+          // Set Play/Pause button behavior
+          const playbackState = data.nowplaying["Playback State"];
+          const playPauseBtn = document.getElementById("playPauseBtn");
+          if (playPauseBtn) {
+          if (playbackState === "Paused") {
+            playPauseBtn.onclick = () => sendPlayerCommand("play");
+            playPauseBtn.textContent = "⏵";
+          } else {
+            playPauseBtn.onclick = () => sendPlayerCommand("pause");
+            playPauseBtn.textContent = "⏸";
+          }
+          }
+
+          // Update progress bar
+          const duration = data.nowplaying.Duration;
+          const position = data.nowplaying.Position;
+          const progressBar = document.getElementById("progressBar");
+          if (duration && position && progressBar) {
+            // Set progress immediately for jumps
+            const trackDuration = parseFloat(duration);
+            let targetPosition = parseFloat(position);
+            if (isNaN(trackDuration) || isNaN(targetPosition)) return;
+            let currentAnimatedPosition = targetPosition;
+
+            function animateProgressBar(timestamp) {
+              if (playbackState !== "Paused") {
+                const delta = targetPosition - currentAnimatedPosition;
+                if (Math.abs(delta) > 1) {
+                  currentAnimatedPosition += delta * 0.2;
+                } else {
+                  currentAnimatedPosition += 0.016; // close enough, move smoothly
+                  targetPosition += 0.016;
+                }
+              } else {
+                currentAnimatedPosition += (targetPosition - currentAnimatedPosition) * 0.1;
+              }
+
+              const clampedPosition = Math.min(Math.max(currentAnimatedPosition, 0), trackDuration);
+              const newPercent = (clampedPosition / trackDuration) * 100;
+              progressBar.style.width = `${newPercent}%`;
+
+              window._progressRAF = requestAnimationFrame(animateProgressBar);
+            }
+
+            cancelAnimationFrame(window._progressRAF);
+            window._progressRAF = requestAnimationFrame(animateProgressBar);
+          }
+        })
+        .catch(err => console.error("Error fetching data:", err));
+    }
+
+    function startInterval() {
+      if (!intervalID) {
+        intervalID = setInterval(refreshData, 1000);
+      }
+    }
+
+    // Add key listener for spacebar to toggle play/pause, and arrow keys for next/previous
+    document.addEventListener("keydown", function(event) {
+      if (event.code === "Space" && event.target === document.body) {
+        event.preventDefault(); // Prevent page scrolling
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        if (playPauseBtn) {
+          playPauseBtn.click();
+        }
+      } else if (event.code === "ArrowRight") {
+        sendPlayerCommand("next");
+      } else if (event.code === "ArrowLeft") {
+        sendPlayerCommand("previous");
+      }
+    });
+
+    window.onload = startInterval;
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const visualizerName = urlParams.get("visualizer") || "visualizer1.js";
+    const visualizerScript = document.createElement("script");
+    visualizerScript.src = `/static/visualizers/${visualizerName}`;
+    visualizerScript.defer = true;
+    visualizerScript.id = "dynamicVisualizerScript";
+    visualizerScript.onload = () => {
+      const canvas = document.getElementById("visualizer-canvas");
+      if (canvas) {
+        canvas.remove();
+      }
+
+      const newCanvas = document.createElement("canvas");
+      newCanvas.id = "visualizer-canvas";
+      newCanvas.className = "absolute inset-0 w-full h-full z-0";
+      document.getElementById("bg-image").prepend(newCanvas);
+
+      if (window.initVisualizer) {
+        console.log("Calling initVisualizer() on initial load");
+        window.initVisualizer();
+      } else {
+        console.warn("initVisualizer not defined on initial load");
+      }
+    };
+    document.head.appendChild(visualizerScript);
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const select = document.getElementById("visualizerSelect");
+      if (select) {
+        select.addEventListener("change", function () {
+          const selected = this.value;
+          const searchParams = new URLSearchParams(window.location.search);
+          searchParams.set("visualizer", selected);
+          window.location.search = searchParams.toString();
+        });
+      }
+    });
+  </script>
+  </head>
+<body class="bg-black text-white flex flex-col justify-center items-center min-h-screen w-full relative">
+
+  <!-- 1) Background image that will be faded in/out via JS -->
+  <div id="bg-image" class="absolute inset-0 fade-transition z-0">
+    <canvas id="visualizer-canvas" class="absolute inset-0 w-full h-full z-0"></canvas>
+  </div>
+
+  <!-- 2) Global frosted-glass overlay (container for dynamic overlay) -->
+  <div id="visualizer-overlay" class="absolute inset-0 z-0"></div>
+
+  <!-- 3) Content wrapper (centred in viewport) -->
+  <div class="relative z-10 flex items-center justify-center w-full px-[1%] h-screen">
+
+    <!-- Flex container: artwork (left) + metadata (right) -->
+    <div class="flex flex-row items-center justify-center w-full max-w-screen-3xl gap-10 px-8 h-[95vh]">
+
+
+
+      <!-- ──────────── Metadata / info section ──────────── -->
+      <div id="metadata_container"
+           class="flex flex-col justify-center text-left fade-transition
+                  backdrop-blur-[100px] backdrop-saturate-150 bg-white/20 rounded-[30px] shadow-xl absolute right-0 mr-10"
+           style="max-width: var(--metadata-max-width); padding: var(--metadata-padding);">
+
+        <!-- Audio info (sample-rate / bit-depth) -->
+        <div id="audioInfo"
+             class="text-lg font-medium mb-3 px-3 py-1 rounded-[20px] border inline-flex items-center gap-2 w-fit text-white">
+          <img src="../static/images/lossless.png" alt="Lossless Icon" class="inline h-5" />
+          <span id="audioLabel">Lossless</span>
+          <span><span id="bitDepth">—</span> Bit/<span id="sampleRate">—</span> kHz</span>
+        </div>
+
+        <!-- Device info (default output) -->
+        <div id="deviceInfo" class="text-base text-white mb-4">
+          <span id="deviceName">—</span> —
+          <span id="deviceBitDepth">—</span> Bit/<span id="deviceSampleRate">—</span> kHz
+        </div>
+
+        <!-- Track metadata -->
+        <p id="title"  class="mb-4 text-4xl font-bold text-white break-words">—</p>
+        <p id="artist" class="mb-2 text-2xl text-white break-words">—</p>
+        <p id="album"  class="mb-2 text-2xl text-white break-words">—</p>
+
+        <!-- Progress bar -->
+        <div class="w-full h-2 bg-white/30 rounded-full overflow-hidden mb-4">
+          <div id="progressBar" class="h-full bg-white transition-all duration-300" style="width: 0%;"></div>
+        </div>
+
+        <div class="mb-4 text-white flex items-center gap-4">
+          <button id="nextVisualizerBtn" class="text-white text-2xl hover:text-gray-400 transition">
+            ⟳
+          </button>
+          <span class="text-white text-sm">Visualizer: <span id="currentVisualizerName">Visualizer 1</span></span>
+        </div>
+
+        <!-- Player controls -->
+        <div class="mt-6 flex gap-4 justify-center">
+          <div class="text-white" style="font-size: var(--player-button-size, 3.5rem);">
+            <button onclick="sendPlayerCommand('previous')" class="hover:opacity-80 transition">⏮</button>
+            <button id="playPauseBtn" class="hover:opacity-80 transition">⏯</button>
+            <button onclick="sendPlayerCommand('next')" class="hover:opacity-80 transition">⏭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("Fetching /visualizers...");
+    fetch("/visualizers")
+      .then(res => res.json())
+      .then(data => {
+        const visualizers = data.visualizers || [];
+        const searchParams = new URLSearchParams(window.location.search);
+        let current = searchParams.get("visualizer");
+
+        if (!current) {
+          const scriptTag = document.getElementById("dynamicVisualizerScript");
+          if (scriptTag && scriptTag.src) {
+            const parts = scriptTag.src.split("/");
+            current = parts[parts.length - 1];
+          }
+        }
+
+        if (!current || !visualizers.includes(current)) {
+          current = visualizers[0];
+        }
+
+        let index = visualizers.indexOf(current);
+        const label = document.getElementById("currentVisualizerName");
+        if (label) {
+          label.textContent = window.visualizerName || visualizers[index].replace(".js", "").replace("visualizer", "Visualizer ");
+        }
+
+        const nextBtn = document.getElementById("nextVisualizerBtn");
+        if (nextBtn) {
+          nextBtn.addEventListener("click", () => {
+            const newIndex = (visualizers.indexOf(current) + 1) % visualizers.length;
+            const newVisualizer = visualizers[newIndex];
+            current = newVisualizer;
+            index = newIndex;
+
+            console.log("Switching to visualizer:", newVisualizer);
+
+            const oldScript = document.getElementById("dynamicVisualizerScript");
+            if (oldScript) {
+              oldScript.remove();
+              window.initVisualizer = null;
+              console.log("Old visualizer script removed.");
+            }
+
+            const script = document.createElement("script");
+            script.src = `/static/visualizers/${newVisualizer}`;
+            script.defer = true;
+            script.id = "dynamicVisualizerScript";
+            script.setAttribute("data-visualizer", "true");
+            script.onload = () => {
+              const oldCanvas = document.querySelector("#visualizer-canvas");
+              if (oldCanvas) oldCanvas.remove();
+
+              const newCanvas = document.createElement("canvas");
+              newCanvas.id = "visualizer-canvas";
+              newCanvas.className = "absolute inset-0 w-full h-full z-0";
+              document.getElementById("bg-image").prepend(newCanvas);
+              console.log("Canvas updated for new visualizer.");
+
+              if (window.initVisualizer) {
+                console.log("Calling initVisualizer()");
+                window.initVisualizer();
+              } else {
+                console.warn("initVisualizer not defined after loading new visualizer.");
+              }
+
+              if (label) {
+                label.textContent = window.visualizerName || newVisualizer.replace(".js", "").replace("visualizer", "Visualizer ");
+              }
+            };
+
+            document.head.appendChild(script);
+            console.log("New visualizer script added:", script.src);
+
+            const canvas = document.getElementById("visualizer-canvas");
+            if (canvas && canvas.getContext) {
+              const ctx = canvas.getContext("2d");
+              if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            const newSearchParams = new URLSearchParams(window.location.search);
+            newSearchParams.set("visualizer", newVisualizer);
+            const newUrl = `${window.location.pathname}?${newSearchParams.toString()}`;
+            window.history.replaceState(null, "", newUrl);
+          });
+        }
+      })
+      .catch(err => console.error("Failed to fetch visualizers:", err));
+  });
+  </script>
+</body>
+</html>
