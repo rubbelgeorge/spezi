@@ -67,6 +67,10 @@
           // Use HEVC if available, otherwise fallback to staticArtwork or default
           let finalArtworkUrl = hevcUrl || staticArtworkUrl || fallbackUrl;
 
+          // Only update artwork/video when URL changes
+          if (!window._lastDisplayedArtworkUrl || window._lastDisplayedArtworkUrl !== finalArtworkUrl) {
+            window._lastDisplayedArtworkUrl = finalArtworkUrl;
+
           // Decide between video or image and preload image to avoid flicker
           const newSrc = `${finalArtworkUrl}?t=${Date.now()}`;
           const videoElement = document.getElementById("album_video");
@@ -108,17 +112,40 @@
             if (currentImgUrl !== finalArtworkUrl) {
               imgElement.classList.remove("hidden");
               imgElement.src = `${fallbackUrl}?fallback=${Date.now()}`;
+              imgElement.style.objectFit = "contain";
+
+              function forceArtworkSize(url, callback) {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = function () {
+                  const canvas = document.createElement("canvas");
+                  canvas.width = 3000;
+                  canvas.height = 3000;
+                  const ctx = canvas.getContext("2d");
+                  ctx.drawImage(img, 0, 0, 3000, 3000);
+                  const resizedDataUrl = canvas.toDataURL("image/png");
+                  callback(resizedDataUrl);
+                };
+                img.src = url;
+              }
+
               const preloadImg = new Image();
+              preloadImg.crossOrigin = "anonymous";
               preloadImg.onload = () => {
-                if (imgElement.src.includes("cover.png") || imgElement.src.includes(fallbackUrl)) {
-                  imgElement.src = newSrc;
-                }
+                forceArtworkSize(newSrc, (resizedUrl) => {
+                  imgElement.src = resizedUrl;
+                  imgElement.style.objectFit = "contain";
+                });
+              };
+              preloadImg.onerror = () => {
+                // Fallback already shown
               };
               preloadImg.src = newSrc;
             } else {
               imgElement.classList.remove("hidden");
             }
           }
+          } // end artwork/video update guard
 
           // Update audio info
           const sampleRateElem = document.getElementById("sampleRate");
