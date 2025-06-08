@@ -13,6 +13,7 @@ func sanitizeForJSON(_ object: Any) -> Any {
     }
 }
 import Foundation
+import AppKit
 
 typealias MRNowPlayingInfoCallback = @convention(c) (DispatchQueue, @escaping ([String: AnyObject]?) -> Void) -> Void
 
@@ -26,6 +27,37 @@ guard let sym = dlsym(handle, "MRMediaRemoteGetNowPlayingInfo") else {
 }
 
 let getNowPlayingInfo = unsafeBitCast(sym, to: MRNowPlayingInfoCallback.self)
+
+func resizeImage(_ data: Data, to size: NSSize) -> Data? {
+    guard let image = NSImage(data: data) else { return nil }
+
+    let targetRect = NSRect(origin: .zero, size: size)
+    let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: Int(size.width),
+        pixelsHigh: Int(size.height),
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 0
+    )
+
+    rep?.size = size
+
+    NSGraphicsContext.saveGraphicsState()
+    if let context = rep.flatMap(NSGraphicsContext.init(bitmapImageRep:)) {
+        NSGraphicsContext.current = context
+        context.imageInterpolation = .high
+        image.draw(in: targetRect, from: .zero, operation: .copy, fraction: 1.0)
+        context.flushGraphics()
+    }
+    NSGraphicsContext.restoreGraphicsState()
+
+    return rep?.representation(using: .png, properties: [:])
+}
 
 func printNowPlayingInfo(_ info: [String: AnyObject]) {
     if UserDefaults.standard.bool(forKey: "PrintRawNowPlayingInfo") {
@@ -43,14 +75,21 @@ func printNowPlayingInfo(_ info: [String: AnyObject]) {
     if let artworkData = info["kMRMediaRemoteNowPlayingInfoArtworkData"] as? Data {
         let artworkURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("static/images/cover.png")
         // Only write artwork if it has changed
-        if let existingData = try? Data(contentsOf: artworkURL), existingData == artworkData {
-            //print("🖼️ Artwork unchanged, skipping write.")
+        if let existingData = try? Data(contentsOf: artworkURL),
+           let resizedExisting = resizeImage(existingData, to: NSSize(width: 3000, height: 3000)),
+           let resizedIncoming = resizeImage(artworkData, to: NSSize(width: 3000, height: 3000)),
+           resizedExisting == resizedIncoming {
+            // Artwork unchanged after resizing, no need to write
         } else {
-            do {
-                try artworkData.write(to: artworkURL)
-                print("🖼️ Artwork saved to \(artworkURL.path)")
-            } catch {
-                print("❌ Failed to write artwork to file: \(error)")
+            if let resizedData = resizeImage(artworkData, to: NSSize(width: 3000, height: 3000)) {
+                do {
+                    try resizedData.write(to: artworkURL)
+                    print("🖼️ Resized artwork saved to \(artworkURL.path)")
+                } catch {
+                    print("❌ Failed to write resized artwork: \(error)")
+                }
+            } else {
+                print("❌ Failed to resize artwork")
             }
         }
     }
@@ -98,8 +137,7 @@ func printNowPlayingInfo(_ info: [String: AnyObject]) {
         metadata["Timestamp"] = formatter.string(from: timestamp)
     }
 
-    if let jsonData = try? JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted]),
-       let jsonString = String(data: jsonData, encoding: .utf8) {
+    if let jsonData = try? JSONSerialization.data(withJSONObject: metadata, options: [.prettyPrinted]) {
         let fileURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("nowplaying.json")
         do {
             try jsonData.write(to: fileURL)
