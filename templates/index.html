@@ -301,7 +301,7 @@
         <div id="video_container"
              class="hidden w-full h-full rounded-[30px] overflow-hidden flex items-center justify-center">
           <video id="album_video"
-                 class="object-contain rounded-[30px]"
+                 class="object-contain rounded-[30px] max-w-full max-h-full"
                  style="max-width: var(--artwork-max-width); max-height: var(--artwork-max-height);"
                  autoplay loop muted playsinline>
             <source id="video_source" src="" type="video/mp4">
@@ -311,11 +311,9 @@
         <!-- Static artwork image container -->
         <div id="img_container"
              class="hidden w-full h-full rounded-[30px] overflow-hidden flex items-center justify-center">
-          <div class="aspect-square w-full h-auto relative rounded-[30px] overflow-hidden">
-            <img id="album_art"
-                 class="absolute inset-0 w-full h-full object-contain rounded-[30px]"
-                 alt="Album Art" />
-          </div>
+          <img id="album_art"
+               class="object-contain rounded-[30px] max-w-full max-h-full"
+               alt="Album Art" />
         </div>
       </div>
 
