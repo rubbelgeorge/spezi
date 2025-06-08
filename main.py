@@ -384,5 +384,5 @@ if __name__ == "__main__":
                 pass
             time.sleep(0.1)
 
-    threading.Thread(target=open_browser_when_ready, args=("http://localhost:22441/?visualizer=visualizer1.js",), daemon=True).start()
+    threading.Thread(target=open_browser_when_ready, args=("http://localhost:22441/?visualizer=visualizer4.js",), daemon=True).start()
     app.run(debug=True, use_reloader=False, host="0.0.0.0", port=22441)
