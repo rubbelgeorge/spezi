@@ -19,7 +19,7 @@ const overlay = document.createElement("div");
 overlay.className = "fixed top-0 left-0 w-screen h-screen bg-black/50 backdrop-blur-[50px] backdrop-saturate-200 contrast-125 z-[-1] dynamic-visualizer-overlay";
 container?.appendChild(overlay);
 
-const bg = PIXI.Sprite.from('/static/images/cover.png');
+const bg = PIXI.Sprite.from('/static/images/cover_low.png');
 bg.anchor.set(0.5);
 bg.x = app.screen.width / 2;
 bg.y = app.screen.height / 2;
@@ -36,7 +36,7 @@ if (textureRatio > screenRatio) {
   bg.height = bg.width / textureRatio;
 }
 let currentArtworkUrl = '';
-currentArtworkUrl = '/static/images/cover.png';
+currentArtworkUrl = '/static/images/cover_low.png';
 const freshBaseTexture = PIXI.BaseTexture.from(`${currentArtworkUrl}?ts=${Date.now()}`);
 const freshTexture = new PIXI.Texture(freshBaseTexture);
 bg.texture = freshTexture;

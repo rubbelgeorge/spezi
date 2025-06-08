@@ -85,6 +85,17 @@ func printNowPlayingInfo(_ info: [String: AnyObject]) {
                 do {
                     try resizedData.write(to: artworkURL)
                     print("🖼️ Resized artwork saved to \(artworkURL.path)")
+                    let lowResURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("static/images/cover_low.png")
+                    if let lowResData = resizeImage(artworkData, to: NSSize(width: 64, height: 64)) {
+                        do {
+                            try lowResData.write(to: lowResURL)
+                            print("🖼️ Low-res artwork saved to \(lowResURL.path)")
+                        } catch {
+                            print("❌ Failed to write low-res artwork: \(error)")
+                        }
+                    } else {
+                        print("❌ Failed to resize low-res artwork")
+                    }
                 } catch {
                     print("❌ Failed to write resized artwork: \(error)")
                 }

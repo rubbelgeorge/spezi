@@ -19,7 +19,7 @@ window.initVisualizer = function () {
         overlayContainer.appendChild(overlay);
     }
 
-    const bg = PIXI.Sprite.from('/static/images/cover.png');
+    const bg = PIXI.Sprite.from('/static/images/cover_low.png');
     let currentArtworkUrl = '';
 
     bg.width = app.screen.width;
@@ -64,7 +64,7 @@ window.initVisualizer = function () {
         filter.uniforms.time += 0.003 * delta;
     });
 
-    updateVisualizerBackground('/static/images/cover.png');
+    updateVisualizerBackground('/static/images/cover_low.png');
 };
 
 // Auto-initialize the visualizer on initial script load

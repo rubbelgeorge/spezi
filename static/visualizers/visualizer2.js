@@ -18,7 +18,7 @@ const overlay = document.createElement("div");
 overlay.className = "fixed top-0 left-0 w-screen h-screen bg-white/5 backdrop-blur-[100px] backdrop-saturate-200 contrast-125 z-[-1] dynamic-visualizer-overlay";
 container?.appendChild(overlay);
 
-const bg = PIXI.Sprite.from('/static/images/cover.png');
+const bg = PIXI.Sprite.from('/static/images/cover_low.png');
 let currentArtworkUrl = '';
 bg.width = app.screen.width;
 bg.height = app.screen.height;
@@ -55,7 +55,7 @@ function updateVisualizerBackground(newUrl) {
     const texture = PIXI.Texture.from(`${newUrl}?ts=${Date.now()}`);
     bg.texture = texture;
 }
-updateVisualizerBackground('/static/images/cover.png');
+updateVisualizerBackground('/static/images/cover_low.png');
 
 window.updateVisualizerBackground = updateVisualizerBackground;
 

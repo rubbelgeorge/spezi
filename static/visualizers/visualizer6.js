@@ -18,7 +18,7 @@ window.initVisualizer = function () {
     "fixed top-0 left-0 w-screen h-screen backdrop-blur-[20px] backdrop-saturate-200 z-[-1] dynamic-visualizer-overlay";
   container?.appendChild(overlay);
 
-  const textureUrl = '/static/images/cover.png';
+  const textureUrl = '/static/images/cover_low.png';
   const baseTexture = PIXI.BaseTexture.from(`${textureUrl}?ts=${Date.now()}`);
   const texture = new PIXI.Texture(baseTexture);
   let currentTexture = texture;

@@ -18,7 +18,7 @@ window.initVisualizer = function () {
     "fixed top-0 left-0 w-screen h-screen  backdrop-blur-[50px] backdrop-saturate-150 z-[-1] dynamic-visualizer-overlay";
   container?.appendChild(overlay);
 
-  const textureUrl = '/static/images/cover.png';
+  const textureUrl = '/static/images/cover_low.png';
   const texture = PIXI.Texture.from(`${textureUrl}?ts=${Date.now()}`);
   const sausage = new PIXI.Sprite(texture);
 

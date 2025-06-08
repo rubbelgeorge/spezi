@@ -60,7 +60,7 @@
 
           if (!window._lastArtworkUrl || window._lastArtworkUrl !== staticArtworkUrl) {
             window._lastArtworkUrl = staticArtworkUrl;
-            if (window.updateVisualizerBackground) updateVisualizerBackground(`/static/images/cover.png?t=${Date.now()}`);
+            if (window.updateVisualizerBackground) updateVisualizerBackground(`/static/images/cover_low.png?t=${Date.now()}`);
 
           }
 
@@ -213,10 +213,21 @@
     }
 
     function startInterval() {
-      if (!intervalID) {
-        intervalID = setInterval(refreshData, 100);
+  if (!intervalID) {
+    function loop() {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          refreshData();
+          intervalID = setTimeout(loop, 1000);
+        });
+      } else {
+        refreshData();
+        intervalID = setTimeout(loop, 1000);
       }
     }
+    loop();
+  }
+}
 
     // Add key listener for spacebar to toggle play/pause, and arrow keys for next/previous
     document.addEventListener("keydown", function(event) {
