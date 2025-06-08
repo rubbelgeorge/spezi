@@ -37,6 +37,8 @@
   Install with:
   ```bash
   xcode-select --install
+  git clone https://github.com/rubbelgeorge/spezi
+  cd spezi
   pip install -r requirements.txt
 
 - **Running the app**  
