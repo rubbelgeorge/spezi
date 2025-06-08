@@ -77,9 +77,9 @@ img.onload = () => {
     vec2 t2 = vec2(fract(sin(time * 1.2) * 93721.1645), fract(cos(time * 1.4) * 57412.7623));
     vec2 t3 = vec2(fract(sin(time * 1.8) * 38711.4321), fract(cos(time * 2.0) * 87123.9832));
 
-    float tp1 = transformPulse(uv, t1, time, 0.05);
-    float tp2 = transformPulse(uv, t2, time, 0.03);
-    float tp3 = transformPulse(uv, t3, time, 0.04);
+    float tp1 = transformPulse(uv, t1, time, 0.02);
+    float tp2 = transformPulse(uv, t2, time, 0.015);
+    float tp3 = transformPulse(uv, t3, time, 0.017);
 
     uv += (uv - t1) * tp1;
     uv += (uv - t2) * tp2;
@@ -92,16 +92,16 @@ img.onload = () => {
     float angle = atan(pos.y, pos.x);
 
     // Spiral warping
-    angle += 0.3 * sin(radius * 8.0 - time * 4.0);
-    radius *= 1.0 + 0.1 * sin(time + radius * 12.0);
+    angle += 0.4 * sin(radius * 6.0 - time * 2.5);
+    radius *= 1.0 + 0.05 * sin(time + radius * 8.0);
 
     pos = vec2(cos(angle), sin(angle)) * radius;
     uv = center + pos;
 
     // Pulsating distortion (reduced amplitude, slower, smoother)
-    uv += 0.01 * vec2(
-      sin(10.0 * uv.y + time * 0.5),
-      cos(10.0 * uv.x + time * 0.4)
+    uv += 0.005 * vec2(
+      sin(8.0 * uv.y + time * 0.4),
+      cos(8.0 * uv.x + time * 0.3)
     );
 
     // Sample color without per-channel UV shifts
@@ -131,8 +131,8 @@ img.onload = () => {
         bg.texture = texture;
     };
     app.ticker.add((delta) => {
-        filter.uniforms.time += 0.003 * delta;
-        bg.rotation += 0.001 * delta;
+        filter.uniforms.time += 0.0005 * delta;
+        bg.rotation += 0.002 * delta;
     });
 };
 }
