@@ -156,16 +156,36 @@
             sampleRateElem.textContent = (sr % 1 === 0) ? sr.toFixed(0) : sr.toFixed(1);
             bitDepthElem.textContent = data.info.bitdepth || "—";
 
-            const label = sr > 48 ? "Hi-Res Lossless" : "Lossless";
-            document.getElementById("audioLabel").textContent = label;
+            const losslessIcon = document.querySelector("#audioInfo img");
+            const rendition = data.info.rendition || "";
 
-            if (sr > 48) {
-              audioInfoElem.style.color = "black";
-              audioInfoElem.style.backgroundColor = "#dea442";
-              audioInfoElem.style.borderColor = "#dea442";
+            if (rendition === "Lossless") {
+              const label = sr > 48 ? "Hi-Res Lossless" : "Lossless";
+              document.getElementById("audioLabel").textContent = label;
+
+              if (losslessIcon) {
+                losslessIcon.src = "../static/images/lossless.png";
+                losslessIcon.classList.remove("hidden");
+              }
+
+              if (sr > 48) {
+                audioInfoElem.style.color = "black";
+                audioInfoElem.style.backgroundColor = "#dea442";
+                audioInfoElem.style.borderColor = "#dea442";
+              } else {
+                audioInfoElem.style.color = "black";
+                audioInfoElem.style.backgroundColor = "white";
+                audioInfoElem.style.borderColor = "white";
+              }
             } else {
-              audioInfoElem.style.color = "black";
-              audioInfoElem.style.backgroundColor = "white";
+              document.getElementById("audioLabel").textContent = "AAC";
+              bitDepthElem.textContent = "16";
+              if (losslessIcon) {
+                losslessIcon.src = "";
+                losslessIcon.classList.add("hidden");
+              }
+              audioInfoElem.style.color = "white";
+              audioInfoElem.style.backgroundColor = "transparent";
               audioInfoElem.style.borderColor = "white";
             }
           } else {
