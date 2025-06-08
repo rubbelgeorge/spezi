@@ -15,7 +15,7 @@ const existingOverlay = container?.querySelector(".dynamic-visualizer-overlay");
 if (existingOverlay) existingOverlay.remove();
 
 const overlay = document.createElement("div");
-overlay.className = "fixed top-0 left-0 w-screen h-screen bg-white/5 backdrop-blur-[100px] backdrop-saturate-200 contrast-125 z-[-1] dynamic-visualizer-overlay";
+overlay.className = "fixed top-0 left-0 w-screen h-screen bg-white/5 backdrop-blur-[100px] backdrop-saturate-180 contrast-125 z-[-1] dynamic-visualizer-overlay";
 container?.appendChild(overlay);
 
 const bg = PIXI.Sprite.from('/static/images/cover_low.png');
