@@ -32,6 +32,7 @@
 - **Python 3.11**  
   > other versions may also work, but this one is recommended
 
+## Setup
 - **Installing**  
   Install with:
   ```bash
