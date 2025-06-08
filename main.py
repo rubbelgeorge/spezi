@@ -1,3 +1,5 @@
+import webbrowser
+import requests
 import subprocess
 import re
 import time
@@ -333,4 +335,16 @@ if __name__ == "__main__":
     threading.Thread(target=monitor_sample_rate, daemon=True).start()
     threading.Thread(target=monitor_now_playing, daemon=True).start()
     threading.Thread(target=monitor_device_info, daemon=True).start()
+    def open_browser_when_ready(url, timeout=10):
+        for _ in range(timeout * 10):
+            try:
+                r = requests.get(url)
+                if r.status_code == 200:
+                    webbrowser.get("safari").open(url)
+                    return
+            except Exception:
+                pass
+            time.sleep(0.1)
+
+    threading.Thread(target=open_browser_when_ready, args=("http://localhost:22441/?visualizer=visualizer1.js",), daemon=True).start()
     app.run(debug=True, use_reloader=False, host="0.0.0.0", port=22441)
