@@ -1,4 +1,4 @@
-# 🎵 Spezi — Apple Music Companion for macOS
+# Spezi — Apple Music Companion for macOS
 
 **Spezi** is a lightweight companion app for **Apple Music** on macOS that enhances your listening experience with:
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <img width="1470" alt="Screenshot 1" src="https://github.com/user-attachments/assets/8fc69c1c-d666-4399-b764-64657ff7cccb" />
 
@@ -24,7 +24,7 @@
 
 ---
 
-## ⚙️ Prerequisites
+## Prerequisites
 
 - **macOS 15.x** or newer  
   > (older versions *might* work, but are untested)
