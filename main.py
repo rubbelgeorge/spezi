@@ -33,9 +33,6 @@ nowplaying_info = {}
 device_info = {}
 artist_art_url = None
 
-latest_cover_data = b""
-last_cover_hash = None
-
 last_album_id = None
 last_artwork = None
 last_avc = None
@@ -253,32 +250,7 @@ def monitor_now_playing():
                 nowplaying_info["Position"] = position
         except Exception:
             pass
-        time.sleep(1)
-
-def monitor_cover_updates():
-    global latest_cover_data, last_cover_hash
-    process = subprocess.Popen(
-        ["swift", "artwork.swift"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    buffer = ""
-    for line in process.stdout:
-        line = line.strip()
-        if not line:
-            continue
-        buffer += line
-        try:
-            image_data = base64.b64decode(buffer, validate=True)
-            current_hash = hashlib.sha256(image_data).hexdigest()
-            if current_hash != last_cover_hash:
-                latest_cover_data = image_data
-                last_cover_hash = current_hash
-                print("✅ Cover updated in memory")
-            buffer = ""
-        except (base64.binascii.Error, ValueError):
-            continue
+        time.sleep(0.01)
 
 @app.route("/")
 def index():
@@ -314,10 +286,6 @@ def data():
         "device": device_info,
         "artist_art": nowplaying_info.get("ArtistArt")
     }
-
-@app.route("/cover")
-def serve_cover():
-    return send_file(BytesIO(latest_cover_data), mimetype="image/png")
 
 # Flask route for player controls
 @app.route("/player/<command>")
@@ -356,7 +324,7 @@ def monitor_device_info():
                 device_info.update(data)
         except Exception:
             pass
-        time.sleep(1)
+        time.sleep(0.1)
 
 @app.route("/visualizers")
 def list_visualizers():
@@ -372,7 +340,6 @@ if __name__ == "__main__":
     threading.Thread(target=monitor_sample_rate, daemon=True).start()
     threading.Thread(target=monitor_now_playing, daemon=True).start()
     threading.Thread(target=monitor_device_info, daemon=True).start()
-    threading.Thread(target=monitor_cover_updates, daemon=True).start()
     def open_browser_when_ready(url, timeout=10):
         for _ in range(timeout * 10):
             try:

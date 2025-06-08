@@ -147,7 +147,7 @@ func printNowPlayingInfo(_ info: [String: AnyObject]) {
     }
 }
 
-Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
     getNowPlayingInfo(DispatchQueue.main) { info in
         guard let info = info else {
             print("⏸ No now playing info available.")
