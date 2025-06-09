@@ -184,11 +184,19 @@ def monitor_now_playing():
                 nowplaying_info.clear()
                 nowplaying_info.update(data)
                 album_id = data.get("Album ID")
-                if album_id:
-                    if album_id != last_album_id:
-                        def fetch_artwork(album_id):
+                if album_id or "iTunes Track ID" in data:
+                    if album_id:
+                        lookup_id = album_id
+                        lookup_type = "album-id"
+                    else:
+                        lookup_id = data["iTunes Track ID"]
+                        lookup_type = "track-id"
+                        if lookup_id != last_album_id:
+                            print(f"No album ID found. Using track ID {lookup_id} as fallback.")
+                    if lookup_id != last_album_id:
+                        def fetch_artwork(lookup_id):
                             result = subprocess.run(
-                                ['python', 'artwork.py', '--album-id', str(album_id)],
+                                ['python', 'artwork.py', f'--{lookup_type}', str(lookup_id)],
                                 capture_output=True, text=True
                             )
                             avc = hevc = artwork = None
@@ -213,9 +221,8 @@ def monitor_now_playing():
                                 global last_hevc
                                 last_hevc = hevc
                             print(artwork)
-
-                        threading.Thread(target=fetch_artwork, args=(album_id,), daemon=True).start()
-                        last_album_id = album_id
+                        threading.Thread(target=fetch_artwork, args=(lookup_id,), daemon=True).start()
+                        last_album_id = lookup_id
 
                 # Only update nowplaying_info with cached values *after* checking for new artwork
                 if last_artwork:
