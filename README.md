@@ -26,8 +26,8 @@
 
 ## Prerequisites
 
-- **macOS 15.x** or newer  
-  > (older versions *might* work, but are untested)
+- **macOS 15.2** or newer  
+  > (older versions *might* work, but are untested. i tested on 15.2 so please leave feedback if newer versions make problems )
 
 - **Python 3.11**  
   > other versions may also work, but this one is recommended
