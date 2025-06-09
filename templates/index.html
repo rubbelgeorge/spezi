@@ -180,13 +180,13 @@
           // Update device info
           const deviceNameElem = document.getElementById("deviceName");
           if (data.device) {
-            deviceNameElem.textContent = data.device.name || "—";
             const deviceSampleRateElem = document.getElementById("deviceSampleRate");
             const deviceBitDepthElem = document.getElementById("deviceBitDepth");
             const dsr = data.device.sample_rate ? data.device.sample_rate / 1000 : null;
             deviceSampleRateElem.textContent = dsr !== null ? ((dsr % 1 === 0) ? dsr.toFixed(0) : dsr.toFixed(1)) : "—";
             deviceBitDepthElem.textContent = data.device.bit_depth || "—";
           }
+          document.getElementById("deviceName").textContent = "Output Device";
 
           // Set Play/Pause button behavior
           const playbackState = data.nowplaying["Playback State"];
@@ -398,7 +398,7 @@
             <span><span id="bitDepth">—</span> Bit/<span id="sampleRate">—</span> kHz</span>
           </div>
           <div id="deviceInfo" class="text-base text-white">
-            <span id="deviceName">—</span> —
+            <span id="deviceName">—</span>:
             <span id="deviceBitDepth">—</span> Bit/<span id="deviceSampleRate">—</span> kHz
           </div>
         </div>
