@@ -54,7 +54,7 @@
 
 ## Notes
 - **Bit-Depth**  
-  This tool is only switching the sample rate, not the Bit-Depth. So make sure, that your audio device is set to 24 Bit or more.  
+  This tool only switches the sample rate, not the Bit-Depth. So make sure, that your audio device is set to 24 Bit or more.  
 - **Visualizers**  
   There are several visualizers included, but you can easily add more. Just duplicate one of the existing in the visualizer folder and change the value. every js file in this folder     that is compatible with the app are in the visualizer app automatically.
 
