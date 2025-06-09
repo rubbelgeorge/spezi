@@ -57,8 +57,27 @@ def get_album_video_urls(album_id):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch ambient video and artwork URLs from an iTunes album.")
-    parser.add_argument("--album-id", required=True, help="The iTunes album ID.")
+    parser.add_argument("--album-id", help="The iTunes album ID.")
+    parser.add_argument("--track-id", help="The iTunes track ID to resolve its album.")
     args = parser.parse_args()
+
+    if not args.album_id and not args.track_id:
+        parser.error("Either --album-id or --track-id must be provided.")
+
+    if args.track_id:
+        track_lookup = requests.get(f"https://itunes.apple.com/lookup?id={args.track_id}")
+        if track_lookup.ok:
+            results = track_lookup.json().get("results", [])
+            if results:
+                args.album_id = results[0].get("collectionId")
+                print(f"Resolved track ID {args.track_id} to album ID {args.album_id}")
+            else:
+                print("No album found for given track ID.")
+                exit(1)
+        else:
+            print("Failed to fetch album for track ID.")
+            exit(1)
+
     album_id = args.album_id
     avc_url, hevc_url, artwork_url = get_album_video_urls(album_id)
     print(f"\nAVC:{avc_url}")

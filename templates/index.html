@@ -180,13 +180,13 @@
           // Update device info
           const deviceNameElem = document.getElementById("deviceName");
           if (data.device) {
-            deviceNameElem.textContent = data.device.name || "—";
             const deviceSampleRateElem = document.getElementById("deviceSampleRate");
             const deviceBitDepthElem = document.getElementById("deviceBitDepth");
             const dsr = data.device.sample_rate ? data.device.sample_rate / 1000 : null;
             deviceSampleRateElem.textContent = dsr !== null ? ((dsr % 1 === 0) ? dsr.toFixed(0) : dsr.toFixed(1)) : "—";
             deviceBitDepthElem.textContent = data.device.bit_depth || "—";
           }
+          document.getElementById("deviceName").textContent = "Output Device";
 
           // Set Play/Pause button behavior
           const playbackState = data.nowplaying["Playback State"];
@@ -361,44 +361,45 @@
                   backdrop-blur-[100px] backdrop-saturate-150 bg-white/20 rounded-[30px] shadow-xl"
            style="max-width: var(--metadata-max-width); padding: var(--metadata-padding);">
 
-        <!-- Audio info (sample-rate / bit-depth) -->
-        <div id="audioInfo"
-             class="text-lg font-medium mb-3 px-3 py-1 rounded-[20px] border inline-flex items-center gap-2 w-fit text-white">
-          <img src="../static/images/lossless.png" alt="Lossless Icon" class="inline h-5" />
-          <span id="audioLabel">Lossless</span>
-          <span><span id="bitDepth">—</span> Bit/<span id="sampleRate">—</span> kHz</span>
-        </div>
-
-        <!-- Device info (default output) -->
-        <div id="deviceInfo" class="text-base text-white mb-4">
-          <span id="deviceName">—</span> —
-          <span id="deviceBitDepth">—</span> Bit/<span id="deviceSampleRate">—</span> kHz
-        </div>
 
         <!-- Track metadata -->
-        <p id="title"  class="mb-4 text-4xl font-bold text-white break-words">—</p>
-        <p id="artist" class="mb-2 text-2xl text-white break-words">—</p>
-        <p id="album"  class="mb-2 text-2xl text-white break-words">—</p>
+        <p id="title"  class="mb-4 text-4xl font-bold text-white break-words text-center">—</p>
+        <p id="artist" class="mb-2 text-2xl text-white break-words text-center">—</p>
+        <p id="album"  class="mb-6 text-2xl text-white break-words text-center">—</p>
 
         <!-- Progress bar -->
-        <div class="w-full h-2 bg-white/30 rounded-full overflow-hidden mb-4">
+        <div class="w-full h-2 bg-white/30 rounded-full overflow-hidden ">
           <div id="progressBar" class="h-full bg-white transition-all duration-300" style="width: 0%;"></div>
         </div>
 
+        <!-- Player controls -->
+        <div class="mt-2 flex gap-4 justify-center">
+          <div class="text-white" style="font-size: var(--player-button-size, 3.5rem);">
+            <button onclick="sendPlayerCommand('previous')" class="hover:opacity-80 transition">⏮</button>
+            <button id="playPauseBtn" class="hover:opacity-80 transition">⏯</button>
+            <button onclick="sendPlayerCommand('next')" class="hover:opacity-80 transition">⏭</button>
+          </div>
+        </div>
+
         <!-- Visualizer headline -->
-        <div class="text-white text-xl font-semibold text-center mb-2">Visualizer</div>
+        <div class="text-white text-xl font-semibold text-center mt-6 mb-2">Visualizer</div>
         <div class="mb-4 text-white flex items-center gap-4 justify-center text-2xl">
           <button id="prevVisualizerBtn" class="hover:text-gray-400 transition" aria-label="Previous Visualizer">&#9664;</button>
           <span class="text-sm" id="currentVisualizerName"></span>
           <button id="nextVisualizerBtn" class="hover:text-gray-400 transition" aria-label="Next Visualizer">&#9654;</button>
         </div>
 
-        <!-- Player controls -->
-        <div class="mt-6 flex gap-4 justify-center">
-          <div class="text-white" style="font-size: var(--player-button-size, 3.5rem);">
-            <button onclick="sendPlayerCommand('previous')" class="hover:opacity-80 transition">⏮</button>
-            <button id="playPauseBtn" class="hover:opacity-80 transition">⏯</button>
-            <button onclick="sendPlayerCommand('next')" class="hover:opacity-80 transition">⏭</button>
+        <!-- Audio and Device info wrapper -->
+        <div id="audioDeviceInfoWrapper" class="flex flex-col items-center justify-center mt-4 space-y-2">
+          <div id="audioInfo"
+               class="text-lg font-medium px-3 py-1 rounded-[20px] border inline-flex items-center gap-2 w-fit text-white">
+            <img src="../static/images/lossless.png" alt="Lossless Icon" class="inline h-5" />
+            <span id="audioLabel">Lossless</span>
+            <span><span id="bitDepth">—</span> Bit/<span id="sampleRate">—</span> kHz</span>
+          </div>
+          <div id="deviceInfo" class="text-base text-white">
+            <span id="deviceName">—</span>:
+            <span id="deviceBitDepth">—</span> Bit/<span id="deviceSampleRate">—</span> kHz
           </div>
         </div>
       </div>
