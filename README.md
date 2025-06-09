@@ -53,13 +53,15 @@
 
 
 ## Notes
-
+- **Bit-Depth**
+  This tool is only switching the sample rate, not the Bit-Depth. So make sure, that your audio device is set to 24 Bit or more.  
 - **Visualizers**  
-  There are several visualizers included, but you can easily add more. Just duplicate one of the existing in the visualizer folder and change the value. every js file in this folder that is compatible with the app are in the visualizer app automatically.
+  There are several visualizers included, but you can easily add more. Just duplicate one of the existing in the visualizer folder and change the value. every js file in this folder     that is compatible with the app are in the visualizer app automatically.
 
 - **Performance**
   There could be some performance issues on older macs. If your mac doesnt support native hevc encoding it could get a bit spicy when viewing animated artwork. An option to force avc    animated artwork is planned.
   The visualizers are utilizing the gpu more than i thought they would. Optimization is planned as well as an option to turn them off.
+  
 
   
 ## Roadmap
