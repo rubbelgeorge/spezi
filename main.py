@@ -381,8 +381,11 @@ def get_settings():
 
 @app.route('/settings', methods=['POST'])
 def update_settings():
+    global settings
     new_settings = request.json
     save_settings(new_settings)
+    settings = load_settings()
+    print("✅ Settings reloaded:", settings)
     return jsonify({"status": "success"})
 
 if __name__ == "__main__":
