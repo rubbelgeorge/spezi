@@ -408,6 +408,7 @@ if __name__ == "__main__":
     port = settings.get("port", 22441)
     visualizer = settings.get("default_visualizer", "visualizer1.js")
     url = f"http://localhost:{port}/?visualizer={visualizer}"
-    threading.Thread(target=open_browser_when_ready, args=(url,), daemon=True).start()
+    if settings.get("open_browser", True):  # default True for safety
+        threading.Thread(target=open_browser_when_ready, args=(url,), daemon=True).start()
 
     app.run(debug=True, use_reloader=False, host="0.0.0.0", port=port)

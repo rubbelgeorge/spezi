@@ -531,6 +531,14 @@
           </select>
         </div>
 
+        <!-- Open Browser on Start -->
+        <div class="mb-4">
+  <label class="flex items-center">
+    <input type="checkbox" id="open_browser" class="form-checkbox mr-2">
+    Open Browser on Start
+  </label>
+</div>
+
         <!-- Sample Rate Match Enabled -->
         <div>
           <label class="block font-medium mb-1" for="srMatchEnabled">Sample Rate Matching</label>
@@ -631,6 +639,7 @@
       const portInput = document.getElementById("port");
       const defaultVisualizerSelect = document.getElementById("defaultVisualizer");
       const srMatchEnabledSelect = document.getElementById("srMatchEnabled");
+      const openBrowserCheckbox = document.getElementById("openBrowser");
       const srFields = {
         "44.1": document.getElementById("sr_44.1"),
         "48": document.getElementById("sr_48"),
@@ -658,6 +667,7 @@
 
         portInput.value = settings.port;
         srMatchEnabledSelect.value = String(settings.sample_rate_match.enabled);
+        openBrowserCheckbox.checked = settings.open_browser ?? true;
 
         toggleSrMappingSection();
 
@@ -685,6 +695,7 @@
         const payload = {
           port: parseInt(portInput.value),
           default_visualizer: defaultVisualizerSelect.value,
+          open_browser: openBrowserCheckbox.checked,
           sample_rate_match: {
             enabled: srMatchEnabledSelect.value === "true",
             mapping: {}
