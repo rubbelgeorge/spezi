@@ -132,10 +132,17 @@
               const preloadImg = new Image();
               preloadImg.crossOrigin = "anonymous";
               preloadImg.onload = () => {
-                forceArtworkSize(newSrc, (resizedUrl) => {
-                  imgElement.src = resizedUrl;
+                if (preloadImg.naturalWidth < 1500 || preloadImg.naturalHeight < 1500) {
+                  // Resize only if smaller than 1500px
+                  forceArtworkSize(newSrc, (resizedUrl) => {
+                    imgElement.src = resizedUrl;
+                    imgElement.style.objectFit = "contain";
+                  });
+                } else {
+                  // Use original image directly
+                  imgElement.src = newSrc;
                   imgElement.style.objectFit = "contain";
-                });
+                }
               };
               preloadImg.onerror = () => {
                 // Fallback already shown

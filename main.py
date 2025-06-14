@@ -35,7 +35,7 @@ def floats_differ(a, b, epsilon=1e-3):
 app = Flask(__name__)
 import logging
 werkzeug_log = logging.getLogger('werkzeug')
-werkzeug_log.setLevel(logging.ERROR)  # Enable GET logs
+werkzeug_log.setLevel(logging.DEBUG)  # Enable GET logs
 
 # To re-enable normal logging, just change the level back:
 # werkzeug_log.setLevel(logging.INFO)
