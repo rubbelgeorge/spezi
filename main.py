@@ -35,7 +35,7 @@ def floats_differ(a, b, epsilon=1e-3):
 app = Flask(__name__)
 import logging
 werkzeug_log = logging.getLogger('werkzeug')
-werkzeug_log.setLevel(logging.INFO)  # Enable GET logs
+werkzeug_log.setLevel(logging.ERROR)  # Enable GET logs
 
 # To re-enable normal logging, just change the level back:
 # werkzeug_log.setLevel(logging.INFO)
@@ -165,7 +165,26 @@ def monitor_sample_rate():
                         elapsed = (pause_time - match_time).total_seconds()
                         #print(f"Paused at {pause_time.strftime('%H:%M:%S')} (elapsed {elapsed:.2f}s since detection)")
                         print(f"Paused")
-                        subprocess.run(['./srswitch.swift', str(sample_rate)])
+                        # Load sample rate matching from settings
+                        sample_rate_match = settings.get("sample_rate_match", {})
+                        enabled = sample_rate_match.get("enabled", False)
+                        mappings = sample_rate_match.get("mapping", {})
+
+                        target_sample_rate = sample_rate  # Default: no remapping
+
+                        if enabled:
+                            # Normalize sample rate to kHz for mapping lookup
+                            normalized_sample_rate_khz = int(sample_rate / 1000)
+                            mapped_value = mappings.get(str(normalized_sample_rate_khz))
+                            if mapped_value is not None:
+                                target_sample_rate = mapped_value * 1000  # convert back to Hz
+                                print(f"✅ Sample rate matching applied: {normalized_sample_rate_khz} kHz -> {mapped_value} kHz")
+                            else:
+                                print(f"⚠️ No mapping for {normalized_sample_rate_khz} kHz found in user settings. Using original sample rate.")
+                        else:
+                            print("ℹ️ Sample rate matching disabled.")
+
+                        subprocess.run(['./srswitch.swift', str(target_sample_rate)])
 
                         music_app.play()
                         print(f"Resumed")
