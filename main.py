@@ -19,6 +19,8 @@ def load_settings():
     with open(SETTINGS_FILE, "r") as f:
         return json.load(f)
 
+settings = load_settings()
+
 def save_settings(data):
     with open(SETTINGS_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -380,5 +382,10 @@ if __name__ == "__main__":
                 pass
             time.sleep(0.1)
 
-    threading.Thread(target=open_browser_when_ready, args=("http://localhost:22441/?visualizer=visualizer4.js",), daemon=True).start()
-    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=22441)
+
+    port = settings.get("port", 22441)
+    visualizer = settings.get("default_visualizer", "visualizer1.js")
+    url = f"http://localhost:{port}/?visualizer={visualizer}"
+    threading.Thread(target=open_browser_when_ready, args=(url,), daemon=True).start()
+
+    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=port)
