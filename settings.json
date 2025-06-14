@@ -1,0 +1,15 @@
+{
+  "port": 22441,
+  "default_visualizer": "visualizer4.js",
+  "sample_rate_match": {
+    "enabled": true,
+    "mapping": {
+      "48": 48,
+      "96": 96,
+      "192": 96,
+      "44.1": 44.1,
+      "88.2": 88.2,
+      "176.4": 88.2
+    }
+  }
+}

@@ -360,6 +360,11 @@
            class="flex flex-col justify-center text-left w-full fade-transition
                   backdrop-blur-[100px] backdrop-saturate-150 bg-white/20 rounded-[30px] shadow-xl"
            style="max-width: var(--metadata-max-width); padding: var(--metadata-padding);">
+        <div class="flex justify-end">
+          <button id="settingsBtn" class="text-white text-3xl hover:opacity-70 transition" aria-label="Settings">
+            ⚙️
+          </button>
+        </div>
 
 
         <!-- Track metadata -->
@@ -499,4 +504,209 @@
   });
   </script>
 </body>
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
+    <div class="backdrop-blur-[100px] backdrop-saturate-200 bg-white/20 text-white rounded-[30px] shadow-2xl p-8 w-[500px]">
+      <h2 class="text-2xl font-semibold mb-6 text-center">Settings</h2>
+
+      <div class="space-y-6">
+
+        <!-- Port -->
+        <div>
+          <label class="block font-medium mb-1" for="port">Port</label>
+          <input id="port" type="number" class="w-full bg-black/30 border border-white/30 rounded px-4 py-2 text-white" />
+        </div>
+
+        <!-- Default Visualizer -->
+        <div>
+          <label class="block font-medium mb-1" for="defaultVisualizer">Default Visualizer</label>
+          <select id="defaultVisualizer" class="w-full bg-black/30 border border-white/30 rounded px-4 py-2 text-white">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+
+        <!-- Sample Rate Match Enabled -->
+        <div>
+          <label class="block font-medium mb-1" for="srMatchEnabled">Sample Rate Matching</label>
+          <select id="srMatchEnabled" class="w-full bg-black/30 border border-white/30 rounded px-4 py-2 text-white">
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+          </select>
+        </div>
+
+        <!-- Sample Rate Mapping -->
+        <div id="srMappingSection" class="transition-all duration-300">
+          <label class="block font-medium mb-2">Sample Rate Mapping</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label>44.1 →</label>
+              <select id="sr_44.1" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+            <div>
+              <label>48 →</label>
+              <select id="sr_48" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+            <div>
+              <label>88.2 →</label>
+              <select id="sr_88.2" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+            <div>
+              <label>96 →</label>
+              <select id="sr_96" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+            <div>
+              <label>176.4 →</label>
+              <select id="sr_176.4" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+            <div>
+              <label>192 →</label>
+              <select id="sr_192" class="w-full bg-black/30 border border-white/30 rounded px-3 py-2 text-white">
+                <option value="44.1">44.1</option>
+                <option value="48">48</option>
+                <option value="88.2">88.2</option>
+                <option value="96">96</option>
+                <option value="176.4">176.4</option>
+                <option value="192">192</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-between">
+        <button id="saveSettings" class="bg-white text-black px-5 py-2 rounded-lg hover:bg-gray-300 transition">Save</button>
+        <button id="closeSettings" class="bg-white text-black px-5 py-2 rounded-lg hover:bg-gray-300 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const settingsBtn = document.getElementById("settingsBtn");
+      const settingsModal = document.getElementById("settingsModal");
+      const closeSettings = document.getElementById("closeSettings");
+      const saveSettings = document.getElementById("saveSettings");
+
+      const portInput = document.getElementById("port");
+      const defaultVisualizerSelect = document.getElementById("defaultVisualizer");
+      const srMatchEnabledSelect = document.getElementById("srMatchEnabled");
+      const srFields = {
+        "44.1": document.getElementById("sr_44.1"),
+        "48": document.getElementById("sr_48"),
+        "88.2": document.getElementById("sr_88.2"),
+        "96": document.getElementById("sr_96"),
+        "176.4": document.getElementById("sr_176.4"),
+        "192": document.getElementById("sr_192")
+      };
+
+      // Toggle Sample Rate Mapping section based on srMatchEnabledSelect value
+      function toggleSrMappingSection() {
+        const mappingSection = document.getElementById("srMappingSection");
+        if (srMatchEnabledSelect.value === "true") {
+          mappingSection.classList.remove("hidden");
+        } else {
+          mappingSection.classList.add("hidden");
+        }
+      }
+
+      srMatchEnabledSelect.addEventListener("change", toggleSrMappingSection);
+
+      async function loadSettings() {
+        const res = await fetch("/settings");
+        const settings = await res.json();
+
+        portInput.value = settings.port;
+        srMatchEnabledSelect.value = String(settings.sample_rate_match.enabled);
+
+        toggleSrMappingSection();
+
+        for (const [key, input] of Object.entries(srFields)) {
+          input.value = String(settings.sample_rate_match.mapping[key]);
+        }
+
+        const visRes = await fetch("/visualizers");
+        const visualizers = (await visRes.json()).visualizers;
+        defaultVisualizerSelect.innerHTML = visualizers.map(v =>
+          `<option value="${v}" ${v === settings.default_visualizer ? 'selected' : ''}>${v}</option>`
+        ).join("");
+      }
+
+      settingsBtn.addEventListener("click", () => {
+        loadSettings();
+        settingsModal.classList.remove("hidden");
+      });
+
+      closeSettings.addEventListener("click", () => {
+        settingsModal.classList.add("hidden");
+      });
+
+      saveSettings.addEventListener("click", async () => {
+        const payload = {
+          port: parseInt(portInput.value),
+          default_visualizer: defaultVisualizerSelect.value,
+          sample_rate_match: {
+            enabled: srMatchEnabledSelect.value === "true",
+            mapping: {}
+          }
+        };
+
+        for (const [key, input] of Object.entries(srFields)) {
+          payload.sample_rate_match.mapping[key] = parseFloat(input.value);
+        }
+
+        const res = await fetch("/settings", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          alert("Settings saved.");
+          settingsModal.classList.add("hidden");
+        } else {
+          alert("Failed to save settings.");
+        }
+      });
+
+      settingsModal.addEventListener("click", (e) => {
+        if (e.target === settingsModal) {
+          settingsModal.classList.add("hidden");
+        }
+      });
+    });
+  </script>
 </html>

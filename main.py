@@ -12,6 +12,16 @@ from Foundation import NSObject
 from ScriptingBridge import SBApplication
 from flask import Flask, render_template
 from flask import send_file
+from flask import jsonify, request
+SETTINGS_FILE = "settings.json"
+
+def load_settings():
+    with open(SETTINGS_FILE, "r") as f:
+        return json.load(f)
+
+def save_settings(data):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 from io import BytesIO
 import base64
 import hashlib
@@ -341,6 +351,18 @@ def list_visualizers():
         return {"visualizers": files}
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+# Settings API
+@app.route('/settings', methods=['GET'])
+def get_settings():
+    return jsonify(load_settings())
+
+@app.route('/settings', methods=['POST'])
+def update_settings():
+    new_settings = request.json
+    save_settings(new_settings)
+    return jsonify({"status": "success"})
 
 if __name__ == "__main__":
     subprocess.Popen(["python3", "device.py"])
