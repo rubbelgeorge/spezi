@@ -534,7 +534,7 @@
         <!-- Open Browser on Start -->
         <div class="mb-4">
   <label class="flex items-center">
-    <input type="checkbox" id="open_browser" class="form-checkbox mr-2">
+    <input type="checkbox" id="openBrowser" class="form-checkbox mr-2">
     Open Browser on Start
   </label>
 </div>
@@ -678,7 +678,7 @@
         const visRes = await fetch("/visualizers");
         const visualizers = (await visRes.json()).visualizers;
         defaultVisualizerSelect.innerHTML = visualizers.map(v =>
-          `<option value="${v}" ${v === settings.default_visualizer ? 'selected' : ''}>${v}</option>`
+          `<option value="${v.file}" ${v.file === settings.default_visualizer ? 'selected' : ''}>${v.name}</option>`
         ).join("");
       }
 

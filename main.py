@@ -367,9 +367,25 @@ def monitor_device_info():
 @app.route("/visualizers")
 def list_visualizers():
     visualizer_dir = os.path.join(app.static_folder, "visualizers")
+    visualizers = []
     try:
-        files = [f for f in os.listdir(visualizer_dir) if f.endswith(".js")]
-        return {"visualizers": files}
+        for filename in os.listdir(visualizer_dir):
+            if not filename.endswith(".js"):
+                continue
+            file_path = os.path.join(visualizer_dir, filename)
+            name = None
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                match = re.search(r"window\.visualizerName\s*=\s*['\"](.+?)['\"]", content)
+                name = match.group(1) if match else os.path.splitext(filename)[0]
+            except Exception:
+                name = os.path.splitext(filename)[0]
+            visualizers.append({
+                "file": filename,
+                "name": name
+            })
+        return {"visualizers": visualizers}
     except Exception as e:
         return {"error": str(e)}, 500
 
