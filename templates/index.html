@@ -423,7 +423,9 @@
     fetch("/visualizers")
       .then(res => res.json())
       .then(data => {
-        const visualizers = data.visualizers || [];
+        const visualizersRaw = data.visualizers || [];
+const visualizers = visualizersRaw.map(v => v.file);
+const visualizerNames = Object.fromEntries(visualizersRaw.map(v => [v.file, v.name]));
         const searchParams = new URLSearchParams(window.location.search);
         let current = searchParams.get("visualizer");
 
