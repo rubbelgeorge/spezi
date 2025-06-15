@@ -246,20 +246,29 @@ let duration = window._currentServerDuration || 0;
   progressBar.style.width = `${percent}%`;
   currentTimeElem.textContent = formatTime(currentPosition);
   if (window.lyricsData) {
-  while (
-    window.currentLyricIndex + 1 < window.lyricsData.length &&
-    currentPosition + 0.7 >= window.lyricsData[window.currentLyricIndex + 1].time
-  ) {
-    window.currentLyricIndex++;
-  }
+    while (
+      window.currentLyricIndex + 1 < window.lyricsData.length &&
+      currentPosition + 0.7 >= window.lyricsData[window.currentLyricIndex + 1].time
+    ) {
+      window.currentLyricIndex++;
+    }
 
-  const currentLyric = window.lyricsData[window.currentLyricIndex].text;
-  lyricsContainer.textContent = currentLyric;
-  const debugElem = document.getElementById("lyricsDebug");
-const lrcTime = window.lyricsData[window.currentLyricIndex].time.toFixed(3);
-const currentPosRounded = currentPosition.toFixed(3);
-debugElem.textContent = `Current Position: ${currentPosRounded} | LRC Time: ${lrcTime}`;
-}
+    const currentIndex = window.currentLyricIndex;
+    const prevLine = currentIndex > 0 ? window.lyricsData[currentIndex - 1].text : "";
+    const currentLine = window.lyricsData[currentIndex].text;
+    const nextLine = currentIndex + 1 < window.lyricsData.length ? window.lyricsData[currentIndex + 1].text : "";
+
+    lyricsContainer.innerHTML = `
+      <div style="opacity: 0.5; font-size: 0.9em;">${prevLine}</div>
+      <div style="font-weight: bold; font-size: 1.2em; margin: 0.3em 0;">${currentLine}</div>
+      <div style="opacity: 0.5; font-size: 0.9em;">${nextLine}</div>
+    `;
+
+    const debugElem = document.getElementById("lyricsDebug");
+    const lrcTime = window.lyricsData[currentIndex].time.toFixed(3);
+    const currentPosRounded = currentPosition.toFixed(3);
+    debugElem.textContent = `Current Position: ${currentPosRounded} | LRC Time: ${lrcTime}`;
+  }
 
 
   requestAnimationFrame(animateProgressBar);
