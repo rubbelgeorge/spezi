@@ -212,6 +212,25 @@
           const duration = data.nowplaying.Duration;
           const position = data.nowplaying.Position;
           const progressBar = document.getElementById("progressBar");
+          const currentTimeElem = document.getElementById("currentTime");
+const totalTimeElem = document.getElementById("totalTime");
+
+function formatTime(seconds) {
+  seconds = Math.floor(seconds);
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+if (duration && position) {
+  totalTimeElem.textContent = formatTime(duration);
+  currentTimeElem.textContent = formatTime(position);
+
+  window._trackDuration = parseFloat(duration);
+  window._lastServerPosition = parseFloat(position);
+  window._lastServerTime = Date.now() / 1000;
+  window._playbackState = playbackState;
+}
           if (duration && position && progressBar) {
             // Set progress immediately for jumps
             const trackDuration = parseFloat(duration);
@@ -219,25 +238,23 @@
             if (isNaN(trackDuration) || isNaN(targetPosition)) return;
             let currentAnimatedPosition = targetPosition;
 
-            function animateProgressBar(timestamp) {
-              if (playbackState !== "Paused") {
-                const delta = targetPosition - currentAnimatedPosition;
-                if (Math.abs(delta) > 1) {
-                  currentAnimatedPosition += delta * 0.2;
-                } else {
-                  currentAnimatedPosition += 0.016; // close enough, move smoothly
-                  targetPosition += 0.016;
-                }
-              } else {
-                currentAnimatedPosition += (targetPosition - currentAnimatedPosition) * 0.1;
-              }
+            function animateProgressBar() {
+  const now = Date.now() / 1000;
+  let elapsed = now - window._lastServerTime;
 
-              const clampedPosition = Math.min(Math.max(currentAnimatedPosition, 0), trackDuration);
-              const newPercent = (clampedPosition / trackDuration) * 100;
-              progressBar.style.width = `${newPercent}%`;
+  if (window._playbackState === "Paused") {
+    elapsed = 0;
+  }
 
-              window._progressRAF = requestAnimationFrame(animateProgressBar);
-            }
+  let currentPosition = window._lastServerPosition + elapsed;
+  if (currentPosition > window._trackDuration) currentPosition = window._trackDuration;
+
+  const percent = (currentPosition / window._trackDuration) * 100;
+  progressBar.style.width = `${percent}%`;
+  currentTimeElem.textContent = formatTime(currentPosition);
+
+  requestAnimationFrame(animateProgressBar);
+}
 
             cancelAnimationFrame(window._progressRAF);
             window._progressRAF = requestAnimationFrame(animateProgressBar);
@@ -382,6 +399,11 @@
         <p id="artist" class="mb-2 text-2xl text-white break-words text-center">—</p>
         <p id="album"  class="mb-6 text-2xl text-white break-words text-center">—</p>
 
+
+          <div class="flex justify-between text-sm text-white/70 mb-1">
+  <span id="currentTime">0:00</span>
+  <span id="totalTime">0:00</span>
+</div>
         <!-- Progress bar -->
         <div class="w-full h-2 bg-white/30 rounded-full overflow-hidden ">
           <div id="progressBar" class="h-full bg-white transition-all duration-300" style="width: 0%;"></div>
