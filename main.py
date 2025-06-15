@@ -294,6 +294,7 @@ def monitor_now_playing():
 @app.route("/")
 def index():
     print(nowplaying_info.get("Artwork"))
+    fresh_settings = load_settings()
     return render_template(
         "index.html",
         info=current_info,
@@ -301,7 +302,8 @@ def index():
         artwork=nowplaying_info.get("Artwork"),
         avc=nowplaying_info.get("AVC"),
         hevc=nowplaying_info.get("HEVC"),
-        version=VERSION
+        version=VERSION,
+        default_visualizer=fresh_settings.get("default_visualizer", "visualizer1.js")
     )
 
 @app.route("/vistest")
@@ -425,7 +427,7 @@ if __name__ == "__main__":
 
     port = settings.get("port", 22441)
     visualizer = settings.get("default_visualizer", "visualizer1.js")
-    url = f"http://localhost:{port}/?visualizer={visualizer}"
+    url = f"http://localhost:{port}"
     if settings.get("open_browser", True):  # default True for safety
         threading.Thread(target=open_browser_when_ready, args=(url,), daemon=True).start()
 
