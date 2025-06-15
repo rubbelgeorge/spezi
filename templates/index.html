@@ -515,6 +515,9 @@ const visualizerNames = Object.fromEntries(visualizersRaw.map(v => [v.file, v.na
       .catch(err => console.error("Failed to fetch visualizers:", err));
   });
   </script>
+<div id="saveToast" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-lg text-white px-6 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-500 pointer-events-none z-50">
+  Settings saved
+</div>
 </body>
   <div id="settingsModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
     <div class="backdrop-blur-[100px] backdrop-saturate-200 bg-white/20 text-white rounded-[30px] shadow-2xl p-8 w-[500px]">
@@ -717,13 +720,18 @@ const visualizerNames = Object.fromEntries(visualizersRaw.map(v => [v.file, v.na
           body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-          alert("Settings saved.");
-          settingsModal.classList.add("hidden");
-        } else {
-          alert("Failed to save settings.");
-        }
-      });
+            if (res.ok) {
+  const toast = document.getElementById("saveToast");
+  toast.classList.add("opacity-100");
+  setTimeout(() => {
+    toast.classList.remove("opacity-100");
+  }, 2000);
+
+  settingsModal.classList.add("hidden");
+} else {
+  alert("Failed to save settings.");
+}
+          });
 
       settingsModal.addEventListener("click", (e) => {
         if (e.target === settingsModal) {
