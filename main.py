@@ -12,6 +12,18 @@ from Foundation import NSObject
 from ScriptingBridge import SBApplication
 from flask import Flask, render_template
 from flask import send_file
+from flask import jsonify, request
+SETTINGS_FILE = "settings.json"
+
+def load_settings():
+    with open(SETTINGS_FILE, "r") as f:
+        return json.load(f)
+
+settings = load_settings()
+
+def save_settings(data):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 from io import BytesIO
 import base64
 import hashlib
@@ -21,9 +33,10 @@ def floats_differ(a, b, epsilon=1e-3):
     return abs(a - b) > epsilon
 
 app = Flask(__name__)
+VERSION = "0.0.3"
 import logging
 werkzeug_log = logging.getLogger('werkzeug')
-werkzeug_log.setLevel(logging.INFO)  # Enable GET logs
+werkzeug_log.setLevel(logging.DEBUG)  # Enable GET logs
 
 # To re-enable normal logging, just change the level back:
 # werkzeug_log.setLevel(logging.INFO)
@@ -153,7 +166,26 @@ def monitor_sample_rate():
                         elapsed = (pause_time - match_time).total_seconds()
                         #print(f"Paused at {pause_time.strftime('%H:%M:%S')} (elapsed {elapsed:.2f}s since detection)")
                         print(f"Paused")
-                        subprocess.run(['./srswitch.swift', str(sample_rate)])
+                        # Load sample rate matching from settings
+                        sample_rate_match = settings.get("sample_rate_match", {})
+                        enabled = sample_rate_match.get("enabled", False)
+                        mappings = sample_rate_match.get("mapping", {})
+
+                        target_sample_rate = sample_rate  # Default: no remapping
+
+                        if enabled:
+                            # Normalize sample rate to kHz for mapping lookup
+                            normalized_sample_rate_khz = int(sample_rate / 1000)
+                            mapped_value = mappings.get(str(normalized_sample_rate_khz))
+                            if mapped_value is not None:
+                                target_sample_rate = mapped_value * 1000  # convert back to Hz
+                                print(f"✅ Sample rate matching applied: {normalized_sample_rate_khz} kHz -> {mapped_value} kHz")
+                            else:
+                                print(f"⚠️ No mapping for {normalized_sample_rate_khz} kHz found in user settings. Using original sample rate.")
+                        else:
+                            print("ℹ️ Sample rate matching disabled.")
+
+                        subprocess.run(['./srswitch.swift', str(target_sample_rate)])
 
                         music_app.play()
                         print(f"Resumed")
@@ -257,18 +289,21 @@ def monitor_now_playing():
                 nowplaying_info["Position"] = position
         except Exception:
             pass
-        time.sleep(0.01)
+        time.sleep(0.1)
 
 @app.route("/")
 def index():
     print(nowplaying_info.get("Artwork"))
+    fresh_settings = load_settings()
     return render_template(
         "index.html",
         info=current_info,
         nowplaying=nowplaying_info,
         artwork=nowplaying_info.get("Artwork"),
         avc=nowplaying_info.get("AVC"),
-        hevc=nowplaying_info.get("HEVC")
+        hevc=nowplaying_info.get("HEVC"),
+        version=VERSION,
+        default_visualizer=fresh_settings.get("default_visualizer", "visualizer1.js")
     )
 
 @app.route("/vistest")
@@ -336,11 +371,42 @@ def monitor_device_info():
 @app.route("/visualizers")
 def list_visualizers():
     visualizer_dir = os.path.join(app.static_folder, "visualizers")
+    visualizers = []
     try:
-        files = [f for f in os.listdir(visualizer_dir) if f.endswith(".js")]
-        return {"visualizers": files}
+        for filename in os.listdir(visualizer_dir):
+            if not filename.endswith(".js"):
+                continue
+            file_path = os.path.join(visualizer_dir, filename)
+            name = None
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                match = re.search(r"window\.visualizerName\s*=\s*['\"](.+?)['\"]", content)
+                name = match.group(1) if match else os.path.splitext(filename)[0]
+            except Exception:
+                name = os.path.splitext(filename)[0]
+            visualizers.append({
+                "file": filename,
+                "name": name
+            })
+        return {"visualizers": visualizers}
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+# Settings API
+@app.route('/settings', methods=['GET'])
+def get_settings():
+    return jsonify(load_settings())
+
+@app.route('/settings', methods=['POST'])
+def update_settings():
+    global settings
+    new_settings = request.json
+    save_settings(new_settings)
+    settings = load_settings()
+    print("✅ Settings reloaded:", settings)
+    return jsonify({"status": "success"})
 
 if __name__ == "__main__":
     subprocess.Popen(["python3", "device.py"])
@@ -358,5 +424,11 @@ if __name__ == "__main__":
                 pass
             time.sleep(0.1)
 
-    threading.Thread(target=open_browser_when_ready, args=("http://localhost:22441/?visualizer=visualizer4.js",), daemon=True).start()
-    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=22441)
+
+    port = settings.get("port", 22441)
+    visualizer = settings.get("default_visualizer", "visualizer1.js")
+    url = f"http://localhost:{port}"
+    if settings.get("open_browser", True):  # default True for safety
+        threading.Thread(target=open_browser_when_ready, args=(url,), daemon=True).start()
+
+    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=port)

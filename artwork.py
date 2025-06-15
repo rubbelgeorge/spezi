@@ -2,6 +2,7 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import argparse
+import json
 
 def get_album_video_urls(album_id):
     url = f"https://music.apple.com/de/album/{album_id}"
@@ -43,15 +44,51 @@ def get_album_video_urls(album_id):
                     max_hevc_bw = bandwidth
                     hevc_url = stream_url
 
+    # Replaced artwork logic: Bendodson API with dynamic best uncompressed selection
     artwork_url = None
-    lookup_resp = requests.get(f"https://itunes.apple.com/de/lookup?id={album_id}")
-    if lookup_resp.ok:
-        results = lookup_resp.json().get("results", [])
-        print(results)
-        if results:
-            artwork_small = results[0].get("artworkUrl100")
-            if artwork_small:
-                artwork_url = re.sub(r"/\d+x\d+bb", "/3000x3000bb", artwork_small)
+    session = requests.Session()
+    bendodson_url = "https://itunesartwork.bendodson.com/api.php"
+    params = {
+        "query": album_id,
+        "entity": "album",
+        "country": "de",
+        "type": "request"
+    }
+
+    try:
+        response1 = session.get(bendodson_url, params=params, headers=headers)
+        response1.raise_for_status()
+        url2 = response1.json()["url"]
+
+        response2 = session.get(url2, headers=headers)
+        response2.raise_for_status()
+
+        text = response2.text
+        if text.startswith('callback(') and text.endswith(')'):
+            text = text[len('callback('):-1]
+        apple_data = json.loads(text)
+
+        post_data = {
+            "json": json.dumps(apple_data),
+            "type": "data",
+            "entity": "album"
+        }
+        response3 = session.post(bendodson_url, data=post_data, headers=headers)
+        response3.raise_for_status()
+        final_data = response3.json()
+
+        candidates = []
+        for result in final_data:
+            uncompressed = result.get("uncompressed")
+            if uncompressed:
+                filename = uncompressed.split('/')[-1]
+                candidates.append((len(filename), filename, uncompressed))
+
+        if candidates:
+            candidates.sort()
+            artwork_url = candidates[0][2]
+    except Exception as e:
+        print(f"Failed to fetch uncompressed artwork: {e}")
 
     return avc_url, hevc_url, artwork_url
 
