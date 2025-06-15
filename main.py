@@ -288,7 +288,7 @@ def monitor_now_playing():
                 nowplaying_info["Position"] = position
         except Exception:
             pass
-        time.sleep(0.01)
+        time.sleep(0.1)
 
 @app.route("/")
 def index():
