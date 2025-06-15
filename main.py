@@ -33,6 +33,7 @@ def floats_differ(a, b, epsilon=1e-3):
     return abs(a - b) > epsilon
 
 app = Flask(__name__)
+VERSION = "0.0.3dev"
 import logging
 werkzeug_log = logging.getLogger('werkzeug')
 werkzeug_log.setLevel(logging.DEBUG)  # Enable GET logs
@@ -299,7 +300,8 @@ def index():
         nowplaying=nowplaying_info,
         artwork=nowplaying_info.get("Artwork"),
         avc=nowplaying_info.get("AVC"),
-        hevc=nowplaying_info.get("HEVC")
+        hevc=nowplaying_info.get("HEVC"),
+        version=VERSION
     )
 
 @app.route("/vistest")
