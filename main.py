@@ -10,9 +10,8 @@ import json
 import os
 from Foundation import NSObject
 from ScriptingBridge import SBApplication
-from flask import Flask, render_template
-from flask import send_file
-from flask import jsonify, request
+from flask import Flask, render_template, send_file, jsonify, request, Response, stream_with_context
+
 SETTINGS_FILE = "settings.json"
 
 def load_settings():
@@ -115,6 +114,29 @@ class MusicApp(NSObject):
 
     def play(self):
         self.music.playOnce_(None)
+
+@app.route('/position-stream')
+def position_stream():
+    def event_stream():
+        while True:
+            duration, position = get_current_playback_info()
+            if duration is None: duration = 0
+            if position is None: position = 0
+            playback_state = nowplaying_info.get("Playback State", "Paused")
+
+            yield f"data: {json.dumps({'position': position, 'duration': duration, 'state': playback_state})}\n\n"
+            time.sleep(0.1)
+    return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
+
+
+@app.route("/lyrics/<path:filename>")
+def serve_lyrics(filename):
+    lyric_dir = os.path.join(app.root_path, "lyrics")
+    file_path = os.path.join(lyric_dir, filename)
+    if not os.path.isfile(file_path):
+        return {"error": "File not found"}, 404
+    return send_file(file_path)
+
 
 def monitor_sample_rate():
     print("Monitoring sample rate logs... Press Ctrl+C to stop.")

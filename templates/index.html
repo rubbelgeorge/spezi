@@ -239,19 +239,28 @@ if (duration && position) {
             let currentAnimatedPosition = targetPosition;
 
             function animateProgressBar() {
-  const now = Date.now() / 1000;
-  let elapsed = now - window._lastServerTime;
-
-  if (window._playbackState === "Paused") {
-    elapsed = 0;
-  }
-
-  let currentPosition = window._lastServerPosition + elapsed;
-  if (currentPosition > window._trackDuration) currentPosition = window._trackDuration;
+  let currentPosition = window._currentServerPosition || 0;
+let duration = window._currentServerDuration || 0;
 
   const percent = (currentPosition / window._trackDuration) * 100;
   progressBar.style.width = `${percent}%`;
   currentTimeElem.textContent = formatTime(currentPosition);
+  if (window.lyricsData) {
+  while (
+    window.currentLyricIndex + 1 < window.lyricsData.length &&
+    currentPosition + 0.7 >= window.lyricsData[window.currentLyricIndex + 1].time
+  ) {
+    window.currentLyricIndex++;
+  }
+
+  const currentLyric = window.lyricsData[window.currentLyricIndex].text;
+  lyricsContainer.textContent = currentLyric;
+  const debugElem = document.getElementById("lyricsDebug");
+const lrcTime = window.lyricsData[window.currentLyricIndex].time.toFixed(3);
+const currentPosRounded = currentPosition.toFixed(3);
+debugElem.textContent = `Current Position: ${currentPosRounded} | LRC Time: ${lrcTime}`;
+}
+
 
   requestAnimationFrame(animateProgressBar);
 }
@@ -300,6 +309,14 @@ if (duration && position) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+        const eventSource = new EventSource("/position-stream");
+
+eventSource.addEventListener("message", function(event) {
+  const data = JSON.parse(event.data);
+  window._currentServerPosition = data.position;
+  window._currentServerDuration = data.duration;
+  window._currentPlaybackState = data.state;
+});
       const urlParams = new URLSearchParams(window.location.search);
       let visualizerName = urlParams.get("visualizer") || "{{ default_visualizer }}";
       if (!visualizerName) visualizerName = "visualizer1.js";
@@ -422,9 +439,16 @@ if (duration && position) {
           </div>
         </div>
 
+        <!-- Lyrics toggle button -->
+        <div class="mt-4 flex justify-center">
+          <button id="toggleLyricsBtn" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition">
+            Show Lyrics
+          </button>
+        </div>
+
         <!-- Visualizer headline -->
-        <div class="text-white text-xl font-semibold text-center mt-6 mb-2">Visualizer</div>
-        <div class="mb-4 text-white flex items-center gap-4 justify-center text-2xl">
+        <div id="visualizerHeadline" class="text-white text-xl font-semibold text-center mt-6 mb-2">Visualizer</div>
+        <div id="visualizerToggle" class="mb-4 text-white flex items-center gap-4 justify-center text-2xl">
           <button id="prevVisualizerBtn" class="hover:text-gray-400 transition" aria-label="Previous Visualizer">&#9664;</button>
           <span class="text-sm" id="currentVisualizerName"></span>
           <button id="nextVisualizerBtn" class="hover:text-gray-400 transition" aria-label="Next Visualizer">&#9654;</button>
@@ -443,6 +467,15 @@ if (duration && position) {
             <span id="deviceBitDepth">—</span> Bit/<span id="deviceSampleRate">—</span> kHz
           </div>
         </div>
+        <div id="lyricsContainer" class="hidden mt-6 text-center text-white text-lg leading-relaxed whitespace-pre-wrap">
+          🎵 Dummy lyrics for demonstration 🎵
+
+          When the night falls
+          And the lights fade
+          The music takes control
+          And carries us away...
+        </div>
+        <div id="lyricsDebug" class="mt-4 text-sm text-gray-400 text-center"></div>
       </div>
     </div>
   </div>
@@ -757,13 +790,80 @@ const visualizerNames = Object.fromEntries(visualizersRaw.map(v => [v.file, v.na
 } else {
   alert("Failed to save settings.");
 }
-          });
+      });
 
       settingsModal.addEventListener("click", (e) => {
         if (e.target === settingsModal) {
           settingsModal.classList.add("hidden");
         }
       });
+
+      // --- Lyrics toggle logic ---
+      const toggleLyricsBtn = document.getElementById("toggleLyricsBtn");
+      const lyricsContainer = document.getElementById("lyricsContainer");
+      const audioDeviceInfoWrapper = document.getElementById("audioDeviceInfoWrapper");
+      const visualizerHeader = document.getElementById("visualizerToggle");
+      const visualizerHeadline = document.getElementById("visualizerHeadline");
+
+      let lyricsLoaded = false;
+
+      toggleLyricsBtn.addEventListener("click", () => {
+        const showing = !lyricsContainer.classList.contains("hidden");
+        if (showing) {
+          lyricsContainer.classList.add("hidden");
+          audioDeviceInfoWrapper.classList.remove("hidden");
+          visualizerHeader.classList.remove("hidden");
+          visualizerHeadline.classList.remove("hidden");
+          toggleLyricsBtn.textContent = "Show Lyrics";
+        } else {
+          if (!lyricsLoaded) {
+            fetch("/lyrics/lyrics.lrc")
+              .then(res => {
+                if (!res.ok) throw new Error("Failed to load lyrics");
+                return res.text();
+              })
+              .then(text => {
+                const lines = text.split("\n");
+window.lyricsData = [];
+
+for (const line of lines) {
+  const match = line.match(/\[(\d+):(\d+)\.(\d{2,3})\](.*)/);
+if (match) {
+  const minutes = parseInt(match[1]);
+  const seconds = parseInt(match[2]);
+  let subSeconds = parseInt(match[3]);
+
+  // If 3 digits → treat as milliseconds
+  if (match[3].length === 3) {
+    subSeconds = subSeconds / 1000;
+  } else {
+    subSeconds = subSeconds / 100;
+  }
+
+  const textContent = match[4].trim();
+  const totalSeconds = minutes * 60 + seconds + subSeconds;
+
+  window.lyricsData.push({ time: totalSeconds, text: textContent });
+}
+}
+
+window.lyricsData.sort((a, b) => a.time - b.time);
+lyricsLoaded = true;
+window.currentLyricIndex = 0;
+              })
+              .catch(err => {
+                lyricsContainer.textContent = "⚠️ Unable to load lyrics.";
+                console.error(err);
+              });
+          }
+          lyricsContainer.classList.remove("hidden");
+          audioDeviceInfoWrapper.classList.add("hidden");
+          visualizerHeader.classList.add("hidden");
+          visualizerHeadline.classList.add("hidden");
+          toggleLyricsBtn.textContent = "Close Lyrics";
+        }
+      });
+      // --- End Lyrics toggle logic ---
     });
   </script>
 </html>
