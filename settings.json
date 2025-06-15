@@ -1,6 +1,6 @@
 {
   "port": 22441,
-  "default_visualizer": "visualizer2.js",
+  "default_visualizer": "visualizer3.js",
   "open_browser": true,
   "sample_rate_match": {
     "enabled": true,

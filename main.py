@@ -33,7 +33,7 @@ def floats_differ(a, b, epsilon=1e-3):
     return abs(a - b) > epsilon
 
 app = Flask(__name__)
-VERSION = "0.0.3dev"
+VERSION = "0.0.3"
 import logging
 werkzeug_log = logging.getLogger('werkzeug')
 werkzeug_log.setLevel(logging.DEBUG)  # Enable GET logs
